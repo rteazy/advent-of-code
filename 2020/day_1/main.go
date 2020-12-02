@@ -9,6 +9,17 @@ import (
 	"strconv"
 )
 
+func main() {
+	sampleData := readData("sample.txt")
+	inputData := readData("input.txt")
+
+	partOne(sampleData)
+	partOne(inputData)
+
+	partTwo(sampleData)
+	partTwo(inputData)
+}
+
 func twoSum(nums []int, c int) (int, int, error) {
 	seen := make(map[int]bool)
 	for _, a := range nums {
@@ -47,17 +58,6 @@ func partTwo(data []int) {
 	a, b, c, err := threeSum(data, 2020)
 	check(err)
 	fmt.Printf("%d\n", a*b*c)
-}
-
-func main() {
-	sampleData := readData("sample.txt")
-	inputData := readData("input.txt")
-
-	partOne(sampleData)
-	partOne(inputData)
-
-	partTwo(sampleData)
-	partTwo(inputData)
 }
 
 func readInts(r io.Reader) ([]int, error) {
