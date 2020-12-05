@@ -14,7 +14,8 @@ type Passport struct {
 	fields map[string]string
 }
 
-func (p Passport) validate() bool {
+// Validate is specific to solving part 2
+func (p Passport) Validate() bool {
 	numRequiredFields := len(p.fields)
 	if numRequiredFields < 7 {
 		return false
@@ -40,14 +41,10 @@ func (p Passport) validate() bool {
 	if !heightMatch || err != nil {
 		return false
 	}
-
 	height := p.fields["hgt"]
 	heightMeasurement := height[len(height)-2:]
-	heightVal, errHeight := strconv.Atoi(height[:len(height)-2])
-
-	if errHeight != nil {
-		return false
-	} else if heightMeasurement == "cm" && (heightVal < 150 || heightVal > 193) {
+	heightVal, _ := strconv.Atoi(height[:len(height)-2])
+	if heightMeasurement == "cm" && (heightVal < 150 || heightVal > 193) {
 		return false
 	} else if heightMeasurement == "in" && (heightVal < 59 || heightVal > 76) {
 		return false
@@ -109,7 +106,7 @@ func partTwo(inputFilename string) {
 	res := 0
 	passports := createPassports(inputFilename)
 	for _, passport := range passports {
-		if passport.validate() {
+		if passport.Validate() {
 			res++
 		}
 	}
