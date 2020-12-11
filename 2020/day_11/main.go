@@ -10,32 +10,30 @@ import (
 
 var inputFile = flag.String("inputFile", "input.txt", "The relative filepath to the problem input")
 
-func partOne() {
-	grid := parseInput()
-	prev := -1
-	for {
-		nextGrid, occupiedSeats := nextState(grid)
-		if occupiedSeats == prev {
-			fmt.Println(occupiedSeats)
-			break
-		}
+type nextState func([][]rune) ([][]rune, int)
 
-		prev, grid = occupiedSeats, nextGrid
-	}
+func partOne() {
+	filledSeats := seatsAtSteadyState(parseInput(), nextStatePartOne)
+	fmt.Println(filledSeats)
 }
 
 func partTwo() {
-	grid := parseInput()
-	prev := -1
+	filledSeats := seatsAtSteadyState(parseInput(), nextStatePartTwo)
+	fmt.Println(filledSeats)
+}
+
+func seatsAtSteadyState(grid [][]rune, fn nextState) int {
+	prevOccupiedSeats := -1
 	for {
-		nextGrid, occupiedSeats := nextStatePartTwo(grid)
-		if occupiedSeats == prev {
-			fmt.Println(occupiedSeats)
+		nextGrid, occupiedSeats := fn(grid)
+		if occupiedSeats == prevOccupiedSeats {
 			break
 		}
 
-		prev, grid = occupiedSeats, nextGrid
+		prevOccupiedSeats, grid = occupiedSeats, nextGrid
 	}
+
+	return prevOccupiedSeats
 }
 
 func nextStatePartTwo(grid [][]rune) ([][]rune, int) {
@@ -99,7 +97,7 @@ func nextStatePartTwo(grid [][]rune) ([][]rune, int) {
 			case '.':
 				newRow[j] = seat
 			default:
-				log.Fatal("Failed")
+				log.Fatal("Failed to match to supported characters")
 			}
 		}
 		res = append(res, newRow)
@@ -108,7 +106,7 @@ func nextStatePartTwo(grid [][]rune) ([][]rune, int) {
 	return res, filledSeats
 }
 
-func nextState(grid [][]rune) ([][]rune, int) {
+func nextStatePartOne(grid [][]rune) ([][]rune, int) {
 	m, n := len(grid), len(grid[0])
 	res := [][]rune{}
 	filledSeats := 0
@@ -155,7 +153,7 @@ func nextState(grid [][]rune) ([][]rune, int) {
 			case '.':
 				newRow[j] = seat
 			default:
-				log.Fatal("Failed")
+				log.Fatal("Failed to match to supported characters")
 			}
 		}
 		res = append(res, newRow)
@@ -188,6 +186,6 @@ func parseInput() [][]rune {
 }
 
 func main() {
-	//partOne()
+	partOne()
 	partTwo()
 }
