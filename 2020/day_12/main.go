@@ -14,19 +14,19 @@ var inputFile = flag.String("inputFile", "input.txt", "The relative filepath to 
 
 func partOne() {
 	actions := parseInput()
-	i, j := 0, 0
+	x, y := 0, 0
 	directions := []rune{'N', 'E', 'S', 'W'}
 	dirIndex := 1
 	for _, act := range actions {
 		switch act.direction {
 		case 'N':
-			i -= act.value
+			y += act.value
 		case 'S':
-			i += act.value
+			y -= act.value
 		case 'W':
-			j -= act.value
+			x -= act.value
 		case 'E':
-			j += act.value
+			x += act.value
 		case 'L':
 			offset := (act.value / 90) % len(directions)
 			dirIndex -= offset
@@ -39,17 +39,17 @@ func partOne() {
 			currDirection := directions[dirIndex]
 			switch currDirection {
 			case 'E':
-				j += act.value
+				x += act.value
 			case 'W':
-				j -= act.value
+				x -= act.value
 			case 'N':
-				i -= act.value
+				y += act.value
 			case 'S':
-				i += act.value
+				y -= act.value
 			}
 		}
 	}
-	fmt.Println(i + j)
+	fmt.Println(math.Abs(float64(x)) + math.Abs(float64(y)))
 }
 
 func partTwo() {
