@@ -35,11 +35,6 @@ func partOne() {
 }
 
 func partTwo() {
-	//Sliding window of size 3
-	// total, a, b, curr
-	// if total > total - a + curr then inc count
-	// total = total - a + curr
-
 	flag.Parse()
 	f, err := os.Open(*inputFile)
 	if err != nil {
