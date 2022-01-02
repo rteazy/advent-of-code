@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"flag"
 	"fmt"
 	"log"
 	"math"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -21,12 +21,35 @@ type Point struct {
 type Node struct {
 	i, j     int
 	visited  bool
-	distance int
+	cost     int
+	distance float64
 }
 
-func NewNode(i, j int) *Node {
+type MinHeap []*Node
+
+func (h MinHeap) Len() int { return len(h) }
+func (h MinHeap) Less(i, j int) bool {
+	return float64(h[i].cost)+h[i].distance < float64(h[j].cost)+h[j].distance
+}
+func (h MinHeap) Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+func (h *MinHeap) Push(x interface{}) {
+	item := x.(*Node)
+	*h = append(*h, item)
+}
+func (h *MinHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil
+	*h = old[0 : n-1]
+	return item
+}
+
+func NewNode(i int, j int, distance float64) *Node {
 	return &Node{
-		i, j, false, math.MaxInt64,
+		i, j, false, math.MaxInt64, distance,
 	}
 }
 
@@ -35,7 +58,8 @@ func partOne() {
 	nodes := make(map[Point]*Node)
 	for i := 0; i < len(grid); i++ {
 		for j := 0; j < len(grid); j++ {
-			nodes[Point{i, j}] = NewNode(i, j)
+			dist := euclideanDistance(grid, i, j)
+			nodes[Point{i, j}] = NewNode(i, j, dist)
 		}
 	}
 	fmt.Printf("Part 1: %d\n", minDist(grid, nodes))
@@ -47,17 +71,20 @@ func partTwo() {
 }
 
 func minDist(grid [][]int, nodes map[Point]*Node) int {
-	startPoint := NewNode(0, 0)
-	startPoint.distance = 0
-	queue := []*Node{startPoint}
+	startPoint := NewNode(0, 0, 0)
+	startPoint.cost = 0
+	queue := make(MinHeap, 0)
+	heap.Init(&queue)
+	heap.Push(&queue, startPoint)
 	m, n := len(grid), len(grid[0])
 
 	var endPoint *Node
 	for len(queue) > 0 {
-		curr := queue[0]
+		curr := heap.Pop(&queue).(*Node)
 		i, j := curr.i, curr.j
 		if i == m-1 && j == n-1 {
 			endPoint = curr
+			break
 		}
 		if visited := curr.visited; !visited {
 			curr.visited = true
@@ -71,29 +98,24 @@ func minDist(grid [][]int, nodes map[Point]*Node) int {
 			neighbors := make([]*Node, 0)
 			for _, point := range neighborPoints {
 				x, y := point.i, point.j
-				if neighborNode, exists := nodes[point]; exists && x >= 0 && x < m && y >= 0 && y < n {
+				if neighborNode, exists := nodes[point]; exists && x >= 0 && x < m && y >= 0 && y < n && !neighborNode.visited {
 					neighbors = append(neighbors, neighborNode)
 				}
 			}
 			for _, neighbor := range neighbors {
 				x, y := neighbor.i, neighbor.j
-				val := curr.distance + grid[x][y]
-				if val < neighbor.distance {
-					neighbor.distance = val
+				val := curr.cost + grid[x][y]
+				if val < neighbor.cost {
+					neighbor.cost = val
 				}
 				if !neighbor.visited {
-					queue = append(queue, neighbor)
+					heap.Push(&queue, neighbor)
 				}
 			}
 		}
-
-		queue = queue[1:]
-		sort.SliceStable(queue, func(i, j int) bool {
-			return queue[i].distance < queue[j].distance
-		})
 	}
 
-	return endPoint.distance
+	return endPoint.cost
 }
 
 func parseInput() [][]int {
@@ -136,9 +158,10 @@ func GetFullGrid() ([][]int, map[Point]*Node) {
 		for j := 0; j < offsetCol; j++ {
 			for x := i; x < m; x += offsetRow {
 				for y := j; y < n; y += offsetCol {
+					dist := euclideanDistance(fullGrid, x, y)
 					if x == i && y == j {
 						fullGrid[x][y] = tileGrid[i][j]
-						nodes[Point{x, y}] = NewNode(x, y)
+						nodes[Point{x, y}] = NewNode(x, y, dist)
 					} else if y == j { // get value from above
 						val := fullGrid[x-offsetRow][y]
 						if val == 9 {
@@ -147,7 +170,7 @@ func GetFullGrid() ([][]int, map[Point]*Node) {
 							val++
 						}
 						fullGrid[x][y] = val
-						nodes[Point{x, y}] = NewNode(x, y)
+						nodes[Point{x, y}] = NewNode(x, y, dist)
 					} else { // get value from left
 						val := fullGrid[x][y-offsetCol]
 						if val == 9 {
@@ -156,7 +179,7 @@ func GetFullGrid() ([][]int, map[Point]*Node) {
 							val++
 						}
 						fullGrid[x][y] = val
-						nodes[Point{x, y}] = NewNode(x, y)
+						nodes[Point{x, y}] = NewNode(x, y, dist)
 					}
 				}
 			}
@@ -164,6 +187,12 @@ func GetFullGrid() ([][]int, map[Point]*Node) {
 	}
 
 	return fullGrid, nodes
+}
+
+func euclideanDistance(grid [][]int, i, j int) float64 {
+	m, n := len(grid)-1, len(grid[0])-1
+	res := math.Pow(float64(m-i), 2.0) + math.Pow(float64(n-j), 2)
+	return math.Sqrt(res)
 }
 
 func main() {
